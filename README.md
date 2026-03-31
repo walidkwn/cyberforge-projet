@@ -1,18 +1,16 @@
-# CyberForge: A Cybersecurity Lab Project
+# CyberForge : Laboratoire de Cybersécurité
 
-https://docs.google.com/document/d/1ngPjKI-Ucm699VAcVJ_WYx0zq0V_WKW8/edit?rtpof=true
-
-**Author:** KAOUANE WALID
-**Duration:** 10 days
-**Focus:** Red Team / Blue Team simulation in an isolated Windows/Active Directory environment
+**Auteur :** KAOUANE WALID
+**Durée :** 10 jours
+**Thème :** Simulation Red Team / Blue Team en environnement Windows/Active Directory isolé
 
 ---
 
-## Project Overview
+## Présentation du projet
 
-CyberForge is a personal virtual laboratory created to simulate realistic intrusion and response scenarios in an isolated Windows/Active Directory environment. The project demonstrates both offensive (Red Team) and defensive (Blue Team) cybersecurity capabilities.
+CyberForge est un laboratoire virtuel personnel conçu pour simuler des scénarios d'intrusion et de réponse réalistes dans un environnement Windows/Active Directory isolé. Le projet démontre des capacités de cybersécurité offensives (Red Team) et défensives (Blue Team).
 
-This lab was built to gain hands-on experience with industry-standard SOC (Security Operations Center) tools, covering threat detection, automated incident response, and malware remediation.
+Ce laboratoire a été réalisé en 10 jours dans le but d'acquérir une expérience pratique avec des outils SOC (Security Operations Center) standards de l'industrie, couvrant la détection des menaces, la réponse automatisée aux incidents et la remédiation des logiciels malveillants.
 
 ---
 
@@ -20,240 +18,150 @@ This lab was built to gain hands-on experience with industry-standard SOC (Secur
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                   CyberForge Lab Network                │
+│               Réseau du laboratoire CyberForge          │
 │                                                         │
 │  ┌──────────────┐        ┌──────────────────────────┐  │
 │  │  Kali Linux  │──────▶ │  Windows Server (AD)     │  │
-│  │  (Attacker)  │        │  + Wazuh Agent           │  │
+│  │  (Attaquant) │        │  + Agent Wazuh           │  │
 │  └──────────────┘        └──────────────┬───────────┘  │
 │                                          │              │
 │  ┌──────────────┐        ┌──────────────▼───────────┐  │
-│  │   Suricata   │◀───────│  Network Traffic         │  │
+│  │   Suricata   │◀───────│  Trafic réseau           │  │
 │  │   (IDS)      │        └──────────────────────────┘  │
 │  └──────┬───────┘                                       │
 │         │                                               │
 │  ┌──────▼───────────────────────────────────────────┐  │
-│  │           Wazuh Manager (SIEM/EDR)               │  │
-│  │     - Alert aggregation & correlation            │  │
-│  │     - Automated active response                  │  │
-│  │     - VirusTotal integration                     │  │
+│  │         Gestionnaire Wazuh (SIEM/EDR)            │  │
+│  │   - Agrégation et corrélation des alertes        │  │
+│  │   - Réponse active automatisée                   │  │
+│  │   - Intégration VirusTotal                       │  │
 │  └──────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Key Components
+## Outils utilisés
 
-### Security Tools Used
-
-| Tool | Role | Description |
-|------|------|-------------|
-| **Wazuh** | SIEM / EDR | Open-source platform for threat detection, integrity monitoring, and incident response |
-| **Suricata** | Network IDS | Real-time network traffic analysis and intrusion detection |
-| **VirusTotal** | Malware Analysis | Cloud-based malware analysis integrated with Wazuh FIM |
-| **Kali Linux** | Attack Simulation | Offensive security tools (Nmap, Hydra) for Red Team scenarios |
-| **Windows AD** | Target Infrastructure | Active Directory domain controller as the monitored environment |
+| Outil | Rôle | Description |
+|-------|------|-------------|
+| **Wazuh** | SIEM / EDR | Plateforme open-source de détection des menaces, surveillance d'intégrité et réponse aux incidents |
+| **Suricata** | IDS Réseau | Analyse du trafic réseau en temps réel et détection d'intrusions |
+| **VirusTotal** | Analyse de malwares | Analyse cloud intégrée à Wazuh FIM |
+| **Kali Linux** | Simulation d'attaques | Outils offensifs (Nmap, Hydra) pour les scénarios Red Team |
+| **Windows AD** | Infrastructure cible | Contrôleur de domaine Active Directory surveillé |
 
 ---
 
-## Three Main Scenarios
+## Les trois scénarios
 
-### Scenario 1 — Network Reconnaissance Detection
+### Scénario 1 — Détection de la reconnaissance réseau
 
-**Objective:** Detect and alert on network scanning activity
-**Attack Tool:** Nmap (from Kali Linux)
-**Detection:** Suricata IDS + Wazuh
+**Objectif :** Détecter et alerter sur les activités de balayage réseau
+**Outil d'attaque :** Nmap (depuis Kali Linux)
+**Détection :** Suricata IDS + Wazuh
 
-**Flow:**
-```
-Kali Linux                 Suricata                    Wazuh
-    │                          │                          │
-    │── nmap -sS target ──────▶│                          │
-    │                          │ Detects SYN scan         │
-    │                          │ signatures               │
-    │                          │──── Alert forwarded ────▶│
-    │                          │                          │ Dashboard alert
-    │                          │                          │ Rule triggered
-```
+**Déroulement :**
+1. L'attaquant lance un scan SYN Nmap depuis Kali Linux vers le réseau cible
+2. Suricata analyse le trafic en temps réel et identifie les signatures de scan (règles ET SCAN)
+3. Suricata génère une alerte et l'écrit dans `eve.json`
+4. Wazuh ingère le fichier et corrèle les alertes
+5. Le tableau de bord Wazuh affiche l'alerte avec les métadonnées complètes des paquets
 
-**Outcome:** Suricata successfully identified SYN/ACK scans and network mapping phases. Alerts escalated to Wazuh dashboard with full packet metadata.
+**Résultat :** Scans SYN/ACK et phases de cartographie réseau détectés en **moins de 5 secondes**.
+**MITRE ATT&CK :** T1046 — Network Service Discovery
 
 ---
 
-### Scenario 2 — RDP Brute Force Defense
+### Scénario 2 — Défense contre le brute force RDP
 
-**Objective:** Automatically block IPs performing RDP brute force attacks
-**Attack Tool:** Hydra (from Kali Linux)
-**Detection & Response:** Wazuh Rule 60204 → Active Response → netsh firewall block
+**Objectif :** Bloquer automatiquement les IP effectuant des attaques par force brute sur RDP
+**Outil d'attaque :** Hydra (depuis Kali Linux)
+**Détection & Réponse :** Règle Wazuh 60204 → Réponse active → Blocage netsh
 
-**Flow:**
-```
-Kali Linux                 Windows Server              Wazuh Manager
-    │                          │                          │
-    │── hydra rdp://target ───▶│                          │
-    │   (multiple failed        │                          │
-    │    login attempts)        │── Auth failure logs ────▶│
-    │                          │                          │ Rule 60204 fires
-    │                          │◀─── Block command ───────│
-    │                          │ netsh advfirewall add    │
-    │                          │ rule block IP (600s)     │
-    │                    ✗     │                          │
-    │── Connection blocked ────│                          │
-```
+**Déroulement :**
+1. L'attaquant lance Hydra depuis Kali Linux pour effectuer un brute force RDP
+2. Windows enregistre les échecs d'authentification (Event ID 4625, LogonType 10)
+3. L'agent Wazuh transmet les événements au gestionnaire
+4. La règle 60204 se déclenche après plusieurs échecs consécutifs
+5. Wazuh exécute le script `block-ip.cmd`
+6. La commande `netsh` bloque l'IP source pendant 600 secondes
+7. La règle est automatiquement supprimée après expiration
 
-**Wazuh Active Response script (`block-ip.cmd`):**
+**Commande de blocage :**
 ```batch
-@echo off
-SET IP=%1
-netsh advfirewall firewall add rule name="WAZUH_BLOCK_%IP%" ^
-    protocol=any dir=in action=block remoteip=%IP%
-timeout /t 600 >nul
-netsh advfirewall firewall delete rule name="WAZUH_BLOCK_%IP%"
+netsh advfirewall firewall add rule name="WAZUH_BLOCK_[IP]" ^
+    protocol=any dir=in action=block remoteip=[IP_ATTAQUANT]
 ```
 
-**Outcome:** Wazuh Rule 60204 triggers automatic IP blocking through Windows netsh commands for 600 seconds (10 minutes), effectively neutralizing the brute force attack in real-time.
+**Résultat :** IP bloquée automatiquement en **moins de 3 secondes** pendant 10 minutes.
+**MITRE ATT&CK :** T1110.001 — Password Guessing
 
 ---
 
-### Scenario 3 — Malware Detection and Removal
+### Scénario 3 — Détection et suppression de malware
 
-**Objective:** Detect, analyze, and automatically remove malicious files
-**Test File:** EICAR standard antivirus test file
-**Detection:** Wazuh FIM + VirusTotal API + Custom Active Response executable
+**Objectif :** Détecter, analyser et supprimer automatiquement les fichiers malveillants
+**Fichier de test :** Fichier de test antivirus standard EICAR
+**Détection :** Wazuh FIM + API VirusTotal + Exécutable Windows personnalisé
 
-**Flow:**
-```
-File Drop                  Wazuh FIM                   VirusTotal
-    │                          │                          │
-    │── EICAR file created ───▶│                          │
-    │                          │ FIM detects new file     │
-    │                          │── Hash submitted ───────▶│
-    │                          │                          │ 60+/72 engines
-    │                          │◀─── Malicious verdict ───│
-    │                          │                          │
-    │                    Active Response                  │
-    │                          │                          │
-    │                          │── delete_malware.exe ──▶ │
-    │                          │   (removes file)         │
-    │                    File deleted ✓                   │
-```
+**Déroulement :**
+1. Un fichier EICAR est déposé dans un répertoire surveillé (`C:\Users\Public\Downloads`)
+2. Wazuh FIM détecte le nouveau fichier en temps réel
+3. Le hash SHA256 est soumis automatiquement à l'API VirusTotal
+4. VirusTotal retourne un verdict malveillant (60+/72 moteurs)
+5. Wazuh déclenche la réponse active avec `delete_malware.exe`
+6. L'exécutable supprime le fichier et journalise l'action
 
-**Custom removal executable (`delete_malware.cpp`):**
-```cpp
-#include <windows.h>
-#include <string>
-
-int main(int argc, char* argv[]) {
-    if (argc < 2) return 1;
-    std::string filePath = argv[1];
-    if (DeleteFileA(filePath.c_str())) {
-        return 0; // Success
-    }
-    return 1; // Failed
-}
-```
-
-**Outcome:** File Integrity Monitoring (FIM) detected the EICAR test file, VirusTotal confirmed it as malicious (60+/72 antivirus engines), and the custom Windows executable automatically deleted the threat, validating the complete detection-to-remediation chain.
+**Résultat :** Détecté par plus de 60 moteurs antivirus sur 72. Suppression automatique en **moins de 10 secondes**.
+**MITRE ATT&CK :** T1204 — User Execution: Malicious File
 
 ---
 
-## Setup Guide
+## Récapitulatif des résultats
 
-### Prerequisites
+| Scénario | Attaque détectée | Réponse automatisée | Temps de réponse |
+|----------|------------------|---------------------|-----------------|
+| Reconnaissance réseau | ✅ Oui | Alerte générée | < 5 secondes |
+| Brute force RDP | ✅ Oui | IP bloquée (600 s) | < 3 secondes |
+| Dépôt de malware EICAR | ✅ Oui | Fichier supprimé | < 10 secondes |
 
-- VMware Workstation or VirtualBox
-- At least 16 GB RAM (recommended: 32 GB)
-- 200 GB free disk space
+---
 
-### Virtual Machines Required
+## Structure du dépôt
 
-| VM | OS | Role | RAM |
-|----|-----|------|-----|
-| Wazuh Server | Ubuntu 22.04 | SIEM Manager | 4 GB |
-| Windows Server | Windows Server 2019 | AD + Target | 4 GB |
-| Kali Linux | Kali 2024 | Attacker | 2 GB |
-
-### Installation Steps
-
-**1. Deploy Wazuh Manager:**
-```bash
-curl -sO https://packages.wazuh.com/4.7/wazuh-install.sh
-sudo bash ./wazuh-install.sh -a
 ```
-
-**2. Install Wazuh Agent on Windows Server:**
-```powershell
-Invoke-WebRequest -Uri "https://packages.wazuh.com/4.x/windows/wazuh-agent-4.7.0-1.msi" `
-    -OutFile "wazuh-agent.msi"
-msiexec.exe /i wazuh-agent.msi WAZUH_MANAGER="<WAZUH_SERVER_IP>"
-```
-
-**3. Configure Suricata on Wazuh Server:**
-```bash
-sudo apt install suricata -y
-sudo suricata-update
-# Edit /etc/suricata/suricata.yaml to set your network interface
-```
-
-**4. Enable VirusTotal Integration in Wazuh:**
-```xml
-<!-- Add to /var/ossec/etc/ossec.conf -->
-<integration>
-    <name>virustotal</name>
-    <api_key>YOUR_VIRUSTOTAL_API_KEY</api_key>
-    <rule_id>550,554</rule_id>
-    <alert_format>json</alert_format>
-</integration>
+CyberForge/
+├── README.md
+├── configs/
+│   ├── ossec.conf              # Configuration agent Wazuh (Windows Server)
+│   ├── wazuh-manager.conf      # Configuration gestionnaire Wazuh + VirusTotal
+│   └── suricata.yaml           # Configuration Suricata IDS
+├── active-response/
+│   ├── block-ip.cmd            # Script de blocage IP (Scénario 2)
+│   └── delete_malware.cpp      # Exécutable de suppression malware (Scénario 3)
+├── rules/
+│   └── custom_rules.xml        # Règles de détection Wazuh personnalisées
+└── scripts/
+    ├── setup-lab.sh            # Installation automatique du laboratoire
+    └── simulate-attacks.sh     # Simulation des 3 attaques (Kali Linux)
 ```
 
 ---
 
-## Wazuh Configuration Snippets
+## Enseignements clés
 
-### ossec.conf — File Integrity Monitoring
-```xml
-<syscheck>
-    <frequency>300</frequency>
-    <directories check_all="yes" realtime="yes">C:\Users\Public\Downloads</directories>
-    <directories check_all="yes" realtime="yes">C:\Temp</directories>
-</syscheck>
-```
-
-### ossec.conf — Active Response (IP Block)
-```xml
-<active-response>
-    <command>firewall-drop</command>
-    <location>local</location>
-    <rules_id>60204</rules_id>
-    <timeout>600</timeout>
-</active-response>
-```
+- La **corrélation SIEM** est indispensable : les logs isolés signifient peu, ce sont les patterns qui révèlent les attaques
+- La **réponse active** comble le fossé entre détection et remédiation sans intervention humaine
+- **FIM + VirusTotal** crée un pipeline d'analyse et de remédiation entièrement automatisé
+- La détection **réseau** (Suricata) complète la surveillance **hôte** (agents Wazuh)
 
 ---
 
-## Results Summary
+## Documentation
 
-| Scenario | Attack Detected | Response Automated | Time to Respond |
-|----------|-----------------|-------------------|-----------------|
-| Nmap Reconnaissance | ✅ Yes | ✅ Alert Generated | < 5 seconds |
-| RDP Brute Force | ✅ Yes | ✅ IP Blocked (600s) | < 3 seconds |
-| EICAR Malware Drop | ✅ Yes | ✅ File Deleted | < 10 seconds |
+Documentation technique complète disponible dans `CyberForge_Documentation.docx`
 
 ---
 
-## Key Learnings
-
-- **SIEM correlation** is critical: individual logs mean little; patterns reveal attacks
-- **Active Response** bridges detection and remediation without human intervention
-- **FIM + threat intelligence** (VirusTotal) creates a powerful automated analysis pipeline
-- **Network-layer detection** (Suricata) complements host-based monitoring (Wazuh agents)
-
----
-
-## Author
-
-**KAOUANE WALID**
-Cybersecurity enthusiast | Red Team / Blue Team practitioner
-
-*Project completed in 10 days as a personal hands-on cybersecurity lab.*
+**KAOUANE WALID** — Passionné de cybersécurité | Red Team / Blue Team

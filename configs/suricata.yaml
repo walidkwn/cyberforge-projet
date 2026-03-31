@@ -1,0 +1,144 @@
+# CyberForge - Suricata Configuration
+# Author: KAOUANE WALID
+#
+# Minimal configuration for CyberForge lab.
+# Full reference: https://suricata.readthedocs.io/en/latest/configuration/suricata-yaml.html
+#
+# Deploy on: Wazuh Manager (Ubuntu 22.04)
+# Place at:  /etc/suricata/suricata.yaml
+
+%YAML 1.1
+---
+
+# ============================================================
+# NETWORK INTERFACE
+# Change eth0 to match your lab network interface
+# ============================================================
+af-packet:
+  - interface: eth0
+    cluster-id: 99
+    cluster-type: cluster_flow
+    defrag: yes
+
+# ============================================================
+# HOME NETWORK DEFINITION
+# Adjust to your lab subnet
+# ============================================================
+vars:
+  address-groups:
+    HOME_NET: "[192.168.1.0/24]"
+    EXTERNAL_NET: "!$HOME_NET"
+    HTTP_SERVERS: "$HOME_NET"
+    SMTP_SERVERS: "$HOME_NET"
+    SQL_SERVERS: "$HOME_NET"
+    DNS_SERVERS: "$HOME_NET"
+    TELNET_SERVERS: "$HOME_NET"
+    AIM_SERVERS: "$EXTERNAL_NET"
+    DC_SERVERS: "$HOME_NET"
+    DNP3_SERVER: "$HOME_NET"
+    DNP3_CLIENT: "$HOME_NET"
+    MODBUS_CLIENT: "$HOME_NET"
+    MODBUS_SERVER: "$HOME_NET"
+    ENIP_CLIENT: "$HOME_NET"
+    ENIP_SERVER: "$HOME_NET"
+
+  port-groups:
+    HTTP_PORTS: "80"
+    SHELLCODE_PORTS: "!80"
+    ORACLE_PORTS: 1521
+    SSH_PORTS: 22
+    DNP3_PORTS: 20000
+    MODBUS_PORTS: 502
+    FILE_DATA_PORTS: "[$HTTP_PORTS,110,143]"
+    FTP_PORTS: 21
+    GENEVE_PORTS: 6081
+    VXLAN_PORTS: 4789
+    TEREDO_PORTS: 3544
+
+# ============================================================
+# OUTPUTS
+# EVE JSON log consumed by Wazuh
+# ============================================================
+outputs:
+  - fast:
+      enabled: yes
+      filename: fast.log
+      append: yes
+
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: eve.json
+      # This file is ingested by Wazuh (see wazuh-manager.conf)
+      types:
+        - alert:
+            payload: yes
+            payload-buffer-size: 4kb
+            payload-printable: yes
+            packet: yes
+            metadata: yes
+            http-body: yes
+            http-body-printable: yes
+            tagged-packets: yes
+        - http:
+            extended: yes
+        - dns:
+            query: yes
+            answer: yes
+        - tls:
+            extended: yes
+        - files:
+            force-magic: no
+        - smtp:
+            extended: yes
+        - ssh
+        - stats:
+            totals: yes
+            threads: no
+            deltas: no
+        - flow
+
+# ============================================================
+# DETECTION ENGINE
+# ============================================================
+detect:
+  profile: medium
+  custom-values:
+    toclient-groups: 3
+    toserver-groups: 25
+  sgh-mpm-context: auto
+  inspection-recursion-limit: 3000
+
+# ============================================================
+# RULE FILES
+# Update rules: sudo suricata-update
+# ============================================================
+default-rule-path: /var/lib/suricata/rules
+
+rule-files:
+  - suricata.rules
+
+# Enable specific rulesets relevant for this lab:
+# - emerging-scan (Nmap / reconnaissance detection)
+# - emerging-exploit (exploit attempts)
+# - emerging-dos (brute force / DoS patterns)
+classification-file: /etc/suricata/classification.config
+reference-config-file: /etc/suricata/reference.config
+
+# ============================================================
+# LOGGING
+# ============================================================
+logging:
+  default-log-level: notice
+  default-output-filter:
+  outputs:
+    - console:
+        enabled: yes
+    - file:
+        enabled: yes
+        level: info
+        filename: /var/log/suricata/suricata.log
+    - syslog:
+        enabled: no
+        facility: local5
+        format: "[%i] <%d> -- "

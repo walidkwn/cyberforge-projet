@@ -1,0 +1,121 @@
+<!--
+    CyberForge - Custom Wazuh Detection Rules
+    Author: KAOUANE WALID
+
+    These rules supplement the default Wazuh ruleset for the three
+    CyberForge scenarios.
+
+    Deploy at: /var/ossec/etc/rules/cyberforge_rules.xml
+    Reference in ossec.conf: <include>cyberforge_rules.xml</include>
+-->
+
+<group name="cyberforge,">
+
+  <!-- ============================================================
+       SCENARIO 1: NETWORK RECONNAISSANCE DETECTION
+       ============================================================ -->
+
+  <!-- Alert when Suricata detects a port scan (ET SCAN category) -->
+  <rule id="100001" level="10">
+    <if_group>suricata</if_group>
+    <field name="alert.category">Attempted Information Leak</field>
+    <match>ET SCAN</match>
+    <description>CyberForge: Suricata detected network reconnaissance (ET SCAN rule)</description>
+    <mitre>
+      <id>T1046</id>  <!-- Network Service Discovery -->
+    </mitre>
+    <group>recon,scan,</group>
+  </rule>
+
+  <!-- Alert on Nmap SYN scan fingerprint -->
+  <rule id="100002" level="12">
+    <if_group>suricata</if_group>
+    <match>NMAP</match>
+    <description>CyberForge: Nmap scan detected by Suricata</description>
+    <mitre>
+      <id>T1046</id>
+    </mitre>
+    <group>recon,nmap,</group>
+  </rule>
+
+  <!-- Multiple scan alerts from same source within short window -->
+  <rule id="100003" level="14" frequency="5" timeframe="60">
+    <if_matched_sid>100001</if_matched_sid>
+    <same_source_ip/>
+    <description>CyberForge: Repeated reconnaissance from same IP - possible active scan campaign</description>
+    <mitre>
+      <id>T1046</id>
+    </mitre>
+    <group>recon,scan,high_frequency,</group>
+  </rule>
+
+  <!-- ============================================================
+       SCENARIO 2: RDP BRUTE FORCE DETECTION
+       ============================================================ -->
+
+  <!-- Windows Event 4625 - Failed logon -->
+  <rule id="100010" level="5">
+    <if_sid>18107</if_sid>  <!-- Windows failed logon -->
+    <field name="win.system.eventID">4625</field>
+    <field name="win.eventdata.logonType">10</field>  <!-- RemoteInteractive = RDP -->
+    <description>CyberForge: RDP authentication failure detected</description>
+    <mitre>
+      <id>T1110</id>  <!-- Brute Force -->
+    </mitre>
+    <group>rdp,authentication_failed,</group>
+  </rule>
+
+  <!-- 5 failed RDP attempts from same IP within 60 seconds -->
+  <rule id="100011" level="12" frequency="5" timeframe="60">
+    <if_matched_sid>100010</if_matched_sid>
+    <same_source_ip/>
+    <description>CyberForge: RDP brute force detected - 5+ failures from same source IP</description>
+    <mitre>
+      <id>T1110.001</id>  <!-- Password Guessing -->
+    </mitre>
+    <group>rdp,brute_force,active_response,</group>
+  </rule>
+
+  <!-- 10 failed RDP attempts - escalate to critical -->
+  <rule id="100012" level="15" frequency="10" timeframe="60">
+    <if_matched_sid>100010</if_matched_sid>
+    <same_source_ip/>
+    <description>CyberForge: CRITICAL - Sustained RDP brute force attack - IP block triggered</description>
+    <mitre>
+      <id>T1110.001</id>
+    </mitre>
+    <group>rdp,brute_force,critical,active_response,</group>
+  </rule>
+
+  <!-- ============================================================
+       SCENARIO 3: MALWARE DETECTION
+       ============================================================ -->
+
+  <!-- FIM detects new file in monitored directory -->
+  <rule id="100020" level="7">
+    <if_sid>554</if_sid>  <!-- File added -->
+    <field name="syscheck.path">C:\\Users\\Public\\Downloads|C:\\Temp</field>
+    <description>CyberForge: New file detected in high-risk directory - submitting to VirusTotal</description>
+    <group>fim,malware_scan,</group>
+  </rule>
+
+  <!-- VirusTotal returns malicious verdict -->
+  <rule id="100021" level="14">
+    <if_sid>87105</if_sid>  <!-- VirusTotal positive hit -->
+    <description>CyberForge: VirusTotal confirmed malicious file - triggering auto-removal</description>
+    <mitre>
+      <id>T1204</id>  <!-- User Execution: Malicious File -->
+    </mitre>
+    <group>malware,virustotal,active_response,</group>
+  </rule>
+
+  <!-- Confirm file was successfully deleted -->
+  <rule id="100022" level="3">
+    <if_sid>554</if_sid>  <!-- File deleted -->
+    <field name="syscheck.event">deleted</field>
+    <field name="syscheck.path">C:\\Users\\Public\\Downloads|C:\\Temp</field>
+    <description>CyberForge: File removed from monitored directory (possible active response cleanup)</description>
+    <group>fim,malware_remediated,</group>
+  </rule>
+
+</group>

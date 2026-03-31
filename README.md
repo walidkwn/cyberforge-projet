@@ -159,9 +159,7 @@ CyberForge/
 ---
 
 ## Documentation
-
-Documentation technique complète disponible dans `CyberForge_Documentation.docx`
-
+https://docs.google.com/document/d/1ngPjKI-Ucm699VAcVJ_WYx0zq0V_WKW8/edit?rtpof=true&tab=t.0
 ---
 
 **KAOUANE WALID** — Passionné de cybersécurité | Red Team / Blue Team

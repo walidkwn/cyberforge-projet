@@ -1,5 +1,7 @@
 # CyberForge: A Cybersecurity Lab Project
 
+https://docs.google.com/document/d/1ngPjKI-Ucm699VAcVJ_WYx0zq0V_WKW8/edit?rtpof=true
+
 **Author:** KAOUANE WALID
 **Duration:** 10 days
 **Focus:** Red Team / Blue Team simulation in an isolated Windows/Active Directory environment
